@@ -3,15 +3,98 @@ import matplotlib.pyplot as plt
 
 norm = np.linalg.norm
 
+# optimization by enumeration {{{
+
+def argmin(options, cost):
+    """
+        cost should be a function of elements in options
+    """
+    return options[np.argmin([cost(op) for op in options])]
+
+def sample_controls(alpha, n = 100):
+    """
+        sample n controls (equi-distant, angularly)
+    """
+    return [alpha*np.array([np.cos(a), np.sin(a)])
+            for a in np.linspace(0, 2*np.pi, n)]
+
+def entropy(beliefs):
+    """
+        the shannon entropy of a list of nums
+    """
+    if not np.isclose(sum(beliefs), 1):
+        raise Exception("beliefs don't sum to 1!")
+
+    return -sum([b*np.log(b) for b in beliefs])
+
+# costs {{{
+
+def expected_entropy(state, goals, beliefs, alpha):
+    """
+        generates a function that maps from a control
+        to the expected entropy if that particular
+        control were to be taken.
+
+        use to compute H(b')
+    """
+    return lambda u: sum([
+        b * entropy(
+                update(state + u,
+                       optimal(state + u, g, alpha),
+                       goals, beliefs, alpha)
+                )
+        for (g, b) in zip(goals, beliefs)
+    ])
+
+def q_value(state, goal):
+    return lambda u: norm(u) + norm(state + u - goal)
+
+def expected_q_value(state, goals, beliefs):
+    """
+        expected q value to trade off between info gain
+
+        cost here explicitly for the optimization by
+        enumeration, use for that.
+    """
+    return lambda u: (sum([b*(norm(u) + norm(state + u - g))
+                for (g, b) in zip(goals, beliefs)]))
+
+# }}}
+
+# }}}
+
 # humans {{{
 
 def optimal(state, goal, alpha):
+    """
+        optimal generates the optimal control given a
+        particular goal.
+
+        We can solve for this analytically, it is the
+        vector in the direction of the goal, with norm
+        alpha.
+
+        use to get the control that an optimal agent
+        acting with a particular goal would do.
+    """
     return ((goal - state)/norm(goal - state))*alpha
+
+def optimal_sampled(state, goal, alpha):
+    return argmin(sample_controls(alpha, n = 1000), q_value(state, goal))
 
 # }}}
 
 # beliefs {{{
+
 def update(state, u_h, goals, beliefs, alpha):
+    """
+        update performs a bayesian step update on
+        beliefs given the observation: u_h.
+
+        use to generate the belief update/what the belief
+        update would be if you were in one state, saw u_h
+        and had the passed in goals and beliefs.
+    """
     beliefs = np.copy(beliefs)
     beliefs = [b*np.exp(
                     norm((state + optimal(state, g, alpha)) - g)
@@ -19,65 +102,67 @@ def update(state, u_h, goals, beliefs, alpha):
                 )
                 for (g, b) in zip(goals, beliefs)]
 
-    # normalize !
+    # normalize!
     beliefs = beliefs/sum(beliefs)
     return beliefs
 
 # }}}
 
 # robots {{{
+
+# This is the interface for the robot controllers, of which
+# there are four:
 #
-# def robot_control(state, u_h, goals, beliefs):
+#   - teleop (no inference + copy human)
+#   - shared (inference + expected best control)
+#   - info   (only care to collapse entropy)
+#   - active (tradeoff between shared and info)
+#
+# def robot_control(state, u_h, goals, beliefs, alpha):
 #   return (control, updated_beliefs)
 
 def teleop(state, u_h, goals, beliefs, alpha):
+    """
+        teleop follows u_h exactly
+    """
+
     return (u_h, beliefs)
 
 def shared(state, u_h, goals, beliefs, alpha):
+    """
+        shared plans in expectation with respect
+        to current beliefs.
+
+        Note: we ASSUME analytical optimum is weighted
+        sum of individual goal optima.
+    """
     beliefs = update(state, u_h, goals, beliefs, alpha)
 
     u_R = np.array([0,0])
     for g, b in zip(goals, beliefs):
         u_R = u_R + b*optimal(state, g, alpha)
 
-    return u_R, beliefs
+    return (u_R, beliefs)
 
-# optimization by enumeration {{{
-
-def argmin(options, cost):
-    return options[np.argmin([cost(op) for op in options])]
-
-def sample_controls(alpha, n = 100):
-    return [alpha*np.array([np.cos(a), np.sin(a)])
-            for a in np.linspace(0, 2*np.pi, n)]
-
-# costs {{{
-
-def entropy(beliefs):
-    return -sum([b*np.log(b) for b in beliefs])
-
-def expected_entropy(state, goals, beliefs, alpha):
-    cost = lambda u: sum([
-        b * entropy(
-                update(state + u,
-                       optimal(state + u, g, alpha),
-                       goals, beliefs, alpha)
-                )
-        for (g, b) in zip(goals, beliefs)])
-
-    return cost
-
-def expected_q_value(state, goals, beliefs):
-    return (sum([b*(norm(u) + norm(state + u - g))
-                for (g, b) in zip(goals, beliefs)]))
-
-# }}}
-
-# }}}
-
-def info(state, u_h, goals, beliefs, alpha):
+def shared_sampled(state, u_h, goals, beliefs, alpha):
+    """
+        exactly shared, but instead of analytical, sampled
+    """
     beliefs = update(state, u_h, goals, beliefs, alpha)
 
+    u_R = argmin(
+            sample_controls(alpha, n = 10000),
+            expected_q_value(state, goals, beliefs),
+          )
+
+    return (u_R, beliefs)
+
+
+def info(state, u_h, goals, beliefs, alpha):
+    """
+        info takes actions which minimize H(b')
+    """
+    beliefs = update(state, u_h, goals, beliefs, alpha)
 
     u_R = argmin(
             sample_controls(alpha),
@@ -87,7 +172,16 @@ def info(state, u_h, goals, beliefs, alpha):
     return (u_R, beliefs)
 
 def active(lam):
+    """
+        active curries the true active function
+        with the lam hyperparamter
+    """
     def active(state, u_h, goals, beliefs, alpha):
+        """
+            active uses lam hyperparamter to trade off
+            between shared shared autonomy expectation
+            planning and entropy minimization
+        """
         beliefs = update(state, u_h, goals, beliefs, alpha)
 
         ee = expected_entropy(state, goals, beliefs, alpha)
@@ -198,6 +292,13 @@ if __name__ == '__main__':
     ])
     start = np.array([0, 0.5])
 
-    (t, b) = simulate(start, goals, 0, optimal, info)
-    visualize(start, goals, trajectory=t)
+    (t, b) = simulate(start, goals, 0, optimal, shared)
+    (t1, b1) = simulate(start, goals, 0, optimal, shared_sampled)
+
+    visualize(start, goals, t)
+    visualize(start, goals, t1)
     plt.show()
+
+    print(t)
+    print(t1)
+
