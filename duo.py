@@ -18,6 +18,11 @@ def sample_controls(alpha, n = 100):
     return [alpha*np.array([np.cos(a), np.sin(a)])
             for a in np.linspace(0, 2*np.pi, n)]
 
+def sample_controls2(alpha, n = 100, m = 10):
+    return np.array([
+        control for a in np.linspace(alpha, 0, m) for control in sample_controls(a, n)
+    ])
+
 def entropy(beliefs):
     """
         the shannon entropy of a list of nums
@@ -56,8 +61,7 @@ def expected_q_value(state, goals, beliefs):
         cost here explicitly for the optimization by
         enumeration, use for that.
     """
-    return lambda u: (sum([b*(norm(u) + norm(state + u - g))
-                for (g, b) in zip(goals, beliefs)]))
+    return lambda u: (sum([b*q_value(state, g)(u) for (g, b) in zip(goals, beliefs)]))
 
 # }}}
 
@@ -134,7 +138,7 @@ def shared(state, u_h, goals, beliefs, alpha):
         to current beliefs.
 
         Note: we ASSUME analytical optimum is weighted
-        sum of individual goal optima.
+        sum of individual goal optima. TODO(not true?)
     """
     beliefs = update(state, u_h, goals, beliefs, alpha)
 
@@ -151,7 +155,7 @@ def shared_sampled(state, u_h, goals, beliefs, alpha):
     beliefs = update(state, u_h, goals, beliefs, alpha)
 
     u_R = argmin(
-            sample_controls(alpha, n = 10000),
+            sample_controls2(alpha, n = 100, m = 10),
             expected_q_value(state, goals, beliefs),
           )
 
@@ -206,6 +210,19 @@ def active(lam):
 # u_h: (x, theta) -> u
 # u_r: (u_h, {theta_i}, b(theta)) -> u
 def simulate(start, goals, true_goal, Fu_h, Fu_r, alpha=0.1, maxiters=100):
+    """
+        run a simulation
+
+        start and goals, true goal is an index
+
+        Fu_h is a function generating the human control
+        Fu_r is a function generating the robot control
+
+        alpha is maximum norm of step size
+        maxiters terminates if goal isn't reached in num of steps
+
+        returns the traj taken and the history of beliefs
+    """
     current = np.copy(start)
     goal = goals[true_goal]
     beliefs = np.array([0.5 for g in goals])
@@ -233,10 +250,17 @@ def simulate(start, goals, true_goal, Fu_h, Fu_r, alpha=0.1, maxiters=100):
 # Plotting {{{
 
 def center(a, cx=0., cy=0., wx=2., wy=2.):
+    """ centers an axis object """
     a.set_xlim(cx-wx/2., cx+wx/2.)
     a.set_ylim(cy-wy/2., cy+wy/2.)
 
 def visualize(start, goals, trajectory=None):
+    """
+        plots the start and goals and trajectory if provided
+        on a 2D canvas
+
+        use to visualize the results of simulate
+    """
     f, a = plt.subplots(1, 1, sharex=True, sharey=True, figsize=(7,7))
     center(a, 0.25, 0.25)
     plt.plot(start[0], start[1], 'bo')
@@ -250,6 +274,10 @@ def visualize(start, goals, trajectory=None):
     return f
 
 def plot_beliefs(beliefs):
+    """
+        plot beliefs over time, use to visualize
+        beliefs returned by simulate
+    """
     fig = plt.figure()
     for i in range(beliefs.shape[1]):
         plt.plot(beliefs[:,i], label="Goal " + repr(i))
@@ -261,6 +289,7 @@ def plot_beliefs(beliefs):
 # Results {{{
 
 def generate_panel_for_anca(start, goals):
+    """ some simple examples """
     (traj, bs) = simulate(start, goals, 0, optimal, teleop)
     f = visualize(start, goals, trajectory=traj)
     f.suptitle("Teleop")
@@ -301,4 +330,3 @@ if __name__ == '__main__':
 
     print(t)
     print(t1)
-
