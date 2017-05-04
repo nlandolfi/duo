@@ -155,7 +155,7 @@ def shared_sampled(state, u_h, goals, beliefs, alpha):
     beliefs = update(state, u_h, goals, beliefs, alpha)
 
     u_R = argmin(
-            sample_controls2(alpha, n = 100, m = 10),
+            sample_controls(alpha, n = 100),
             expected_q_value(state, goals, beliefs),
           )
 
@@ -273,14 +273,21 @@ def visualize(start, goals, trajectory=None):
 
     return f
 
-def plot_beliefs(beliefs):
+def plot_beliefs(beliefs, labels=None):
     """
         plot beliefs over time, use to visualize
         beliefs returned by simulate
+
+        labels are "Goal i" if they aren't provided
     """
     fig = plt.figure()
     for i in range(beliefs.shape[1]):
-        plt.plot(beliefs[:,i], label="Goal " + repr(i))
+        if labels is None:
+            label = "Goal " + repr(i)
+        else:
+            label = labels[i]
+
+        plt.plot(beliefs[:,i], label=label)
     plt.legend()
     return fig
 
@@ -288,14 +295,14 @@ def plot_beliefs(beliefs):
 
 # Results {{{
 
-def generate_panel_for_anca(start, goals):
+def anca(start, goals):
     """ some simple examples """
     (traj, bs) = simulate(start, goals, 0, optimal, teleop)
     f = visualize(start, goals, trajectory=traj)
     f.suptitle("Teleop")
     f.savefig("teleop_traj")
 
-    (traj, bs) = simulate(start, goals, 0, optimal, shared)
+    (traj, bs) = simulate(start, goals, 0, optimal, shared_sampled)
     f = plot_beliefs(bs)
     f.suptitle("Shared Autonomy Beliefs")
     f.savefig("shared_beliefs")
@@ -321,12 +328,5 @@ if __name__ == '__main__':
     ])
     start = np.array([0, 0.5])
 
-    (t, b) = simulate(start, goals, 0, optimal, shared)
-    (t1, b1) = simulate(start, goals, 0, optimal, shared_sampled)
-
-    visualize(start, goals, t)
-    visualize(start, goals, t1)
-    plt.show()
-
-    print(t)
-    print(t1)
+    (t, b) = simulate(start, goals, 0, optimal, shared_sampled)
+    (t1, b1) = simulate(start, goals, 0, optimal, active(100))
