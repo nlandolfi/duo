@@ -261,6 +261,82 @@ def active(likelihood, human_model, lam):
 
 # simulation {{{
 
+HUMAN_OPTIMAL = "optimal"
+HUMAN_LAZY    = "lazy"
+
+ROBOT_TELEOP = "teleop"
+ROBOT_SHARED = "shared"
+ROBOT_ACTIVE = "active"
+
+def likelihood_for(l):
+    if l == "boltzmann":
+        return boltzmann()
+
+    if l == "lazy":
+        return lazylike
+
+    raise Exception()
+
+def human_for(h):
+    if h == HUMAN_OPTIMAL:
+        return forget_u_r(optimal)
+
+    if h == HUMAN_LAZY:
+        return lazy
+
+    raise Exception()
+
+def robot_for(r, h, likelihood, robot_params):
+    if r == ROBOT_TELEOP:
+        return teleop
+
+    if r == ROBOT_SHARED:
+        return shared_sampled(likelihood, human_for(h))
+
+    if r == ROBOT_ACTIVE:
+        if "lambda" not in robot_params:
+            raise Exception()
+
+        return active(likelihood, human_for(h), robot_params["lambda"])
+
+    raise Exception()
+
+def run(ics):
+    if "start" not in ics:
+        raise Exception("initial conditions must specify 'start'")
+    start = ics["start"]
+
+    if "goals" not in ics:
+        raise Exception("initial conditions must specify 'goals'")
+    goals = ics["goals"]
+
+    if "true_goal" not in ics:
+        raise Exception("initial conditions must specify 'true_goal'")
+    true_goal = ics["true_goal"]
+
+    if "prior" not in ics:
+        raise Exception("initial conditions must specify 'prior'")
+    prior = ics["prior"]
+
+    if "human" not in ics:
+        raise Exception("initial conditions must specify 'human'")
+    human = human_for(ics["human"])
+
+    if "likelihood" not in ics:
+        raise Exception()
+    likelihood = likelihood_for(ics["likelihood"])
+
+    robot_params = {}
+    if "robot_params" in ics:
+        robot_params = ics["robot_params"]
+
+    if "robot" not in ics:
+        raise Exception("initial conditions must specify 'robot'")
+    robot = robot_for(ics["robot"], ics["human"], likelihood, robot_params)
+
+    return simulate(start, goals, true_goal, human, robot, prior=prior)
+
+
 # u_h: (x, theta) -> u
 # u_r: (u_h, {theta_i}, b(theta)) -> u
 def simulate(start, goals, true_goal, Fu_h, Fu_r, prior=None, alpha=0.1, maxiters=100):
@@ -365,13 +441,29 @@ def compare_beliefs(a, belief_sets, goal=0, labels=None):
 
 def anca(start, goals):
     """ some simple examples """
-    (traj, bs) = simulate(start, goals, 0, forget_u_r(optimal), teleop)
+    (traj, bs) = run({
+        "start": start,
+        "goals": goals,
+        "true_goal": 0,
+        "prior": np.array([0.5, 0.5]),
+        "likelihood": "boltzmann",
+        "human": "optimal",
+        "robot": "teleop",
+    })
     f, a = plt.subplots(1)
     visualize(a, start, goals, trajectories=[traj])
     f.suptitle("Teleop")
     f.savefig("teleop_traj")
 
-    (traj, bs) = simulate(start, goals, 0, forget_u_r(optimal), shared_sampled(boltzmann(), forget_u_r(optimal)))
+    (traj, bs) = run({
+        "start": start,
+        "goals": goals,
+        "true_goal": 0,
+        "prior": np.array([0.5, 0.5]),
+        "likelihood": "boltzmann",
+        "human": "optimal",
+        "robot": "shared",
+    })
     f, a = plt.subplots(1)
     plot_beliefs(a, bs)
     f.suptitle("Shared Autonomy Beliefs")
@@ -382,7 +474,18 @@ def anca(start, goals):
     f.savefig("shared_traj")
 
     for lam in [1,20,100]:
-        (traj, bs) = simulate(start, goals, 0, forget_u_r(optimal), active(boltzmann(), forget_u_r(optimal), lam))
+        (traj, bs) = run({
+            "start": start,
+            "goals": goals,
+            "true_goal": 0,
+            "prior": np.array([0.5, 0.5]),
+            "likelihood": "boltzmann",
+            "human": "optimal",
+            "robot": "active",
+            "robot_params": {
+                "lambda": lam,
+            },
+        })
         f, a = plt.subplots(1)
         plot_beliefs(a, bs)
         f.suptitle("Active Beliefs Lambda = " + repr(lam))

@@ -2,6 +2,29 @@ import numpy as np
 
 import duo
 
+def test_angle_between():
+    cases = [
+        {
+            "in": (np.array([1, 0, 0]), np.array([1, 0, 0])),
+            "out": 0.0,
+        },
+        {
+            "in": (np.array([-1, 0, 0]), np.array([1, 0, 0])),
+            "out": np.pi,
+        },
+        {
+            "in": (np.array([1, 0]), np.array([0, 1])),
+            "out": np.pi/2,
+        },
+    ]
+
+    for case in cases:
+        got = duo.angle_between(*case["in"])
+        want = case["out"]
+
+        if not (got == want):
+            raise Exception("test_angle_between")
+
 # optimization by enumeration {{{
 
 def test_argmin():
@@ -99,6 +122,7 @@ def test_expected_q_value():
 # }}}
 
 if __name__ == '__main__':
+    test_angle_between()
     test_argmin()
     test_sample_controls()
     test_entropy()
