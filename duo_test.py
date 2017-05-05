@@ -121,6 +121,30 @@ def test_expected_q_value():
 
 # }}}
 
+def test_run():
+    cases = [ "teleop", "shared", "active=1", "active=20", "active=100" ]
+    for case in cases:
+        ics  = duo.load("./test_examples/" + case + ".json")
+        want = np.load("./test_examples/" + case + ".npy")
+        got  = duo.run(ics)
+
+        if not (len(want) == 4 and len(got) == 4):
+            raise Exception("test_run expect len(got) = len(want) = 4")
+
+        if not np.allclose(want[0], got[0]):
+            raise Exception("test_run case " + case + "trajectory isn't matching")
+
+        if not np.allclose(want[1], got[1]):
+            raise Exception("test_run case " + case + "belief isn't matching")
+
+        if not np.allclose(want[2], got[2]):
+            raise Exception("test_run case " + case + "u_h isn't matching")
+
+        if not np.allclose(want[3], got[3]):
+            raise Exception("test_run case " + case + "u_r isn't matching")
+
+
+
 if __name__ == '__main__':
     test_angle_between()
     test_argmin()
@@ -128,3 +152,4 @@ if __name__ == '__main__':
     test_entropy()
     test_q_value()
     test_expected_q_value()
+    test_run()

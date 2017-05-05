@@ -1,3 +1,5 @@
+import json
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -265,6 +267,18 @@ def active(likelihood, human_model, lam):
 
 # simulation {{{
 
+# marshaling {{{
+
+def save(filename, declaration):
+    with open(filename, 'w') as f:
+        json.dump(declaration, f, indent=4)
+
+def load(filename):
+    with open(filename, 'r') as f:
+        return json.load(f)
+
+# }}}
+
 HUMAN_OPTIMAL = "optimal"
 HUMAN_LAZY    = "lazy"
 
@@ -308,11 +322,11 @@ def robot_for(r, h, likelihood, robot_params):
 def run(ics):
     if "start" not in ics:
         raise Exception("initial conditions must specify 'start'")
-    start = ics["start"]
+    start = np.asarray(ics["start"])
 
     if "goals" not in ics:
         raise Exception("initial conditions must specify 'goals'")
-    goals = ics["goals"]
+    goals = np.asarray(ics["goals"])
 
     if "true_goal" not in ics:
         raise Exception("initial conditions must specify 'true_goal'")
@@ -320,7 +334,7 @@ def run(ics):
 
     if "prior" not in ics:
         raise Exception("initial conditions must specify 'prior'")
-    prior = ics["prior"]
+    prior = np.asarray(ics["prior"])
 
     if "human" not in ics:
         raise Exception("initial conditions must specify 'human'")
@@ -367,11 +381,13 @@ def simulate(start, goals, true_goal, Fu_h, Fu_r, prior=None, alpha=0.1, maxiter
 
     trajectory = [current]
     belief_hist = [beliefs]
+    u_hs = []
     u_rs = [np.array([0.0, 0.0])]
 
     iters = 0
     while norm(current - goal) > alpha and iters < maxiters:
         u_h = Fu_h(current, goal, u_rs[-1], alpha)
+        u_hs.append(u_h)
         (u_r, beliefs) = Fu_r(current, u_h, u_rs[-1], goals, beliefs, alpha)
         u_rs.append(u_r)
 
@@ -383,7 +399,7 @@ def simulate(start, goals, true_goal, Fu_h, Fu_r, prior=None, alpha=0.1, maxiter
         belief_hist.append(beliefs)
         iters += 1
 
-    return trajectory, np.asarray(belief_hist)
+    return trajectory, np.asarray(belief_hist), np.asarray(u_hs), np.asarray(u_rs[1:])
 
 # }}}
 
@@ -445,29 +461,31 @@ def compare_beliefs(a, belief_sets, goal=0, labels=None):
 
 def anca(start, goals):
     """ some simple examples """
-    (traj, bs) = run({
-        "start": start,
-        "goals": goals,
+    teleop = {
+        "start": start.tolist(),
+        "goals": goals.tolist(),
         "true_goal": 0,
-        "prior": np.array([0.5, 0.5]),
+        "prior": np.array([0.5, 0.5]).tolist(),
         "likelihood": "boltzmann",
         "human": "optimal",
         "robot": "teleop",
-    })
+    }
+    (traj, bs, uhs, urs) = run(teleop)
     f, a = plt.subplots(1)
     visualize(a, start, goals, trajectories=[traj])
     f.suptitle("Teleop")
     f.savefig("teleop_traj")
 
-    (traj, bs) = run({
-        "start": start,
-        "goals": goals,
+    shared = {
+        "start": start.tolist(),
+        "goals": goals.tolist(),
         "true_goal": 0,
-        "prior": np.array([0.5, 0.5]),
+        "prior": np.array([0.5, 0.5]).tolist(),
         "likelihood": "boltzmann",
         "human": "optimal",
         "robot": "shared",
-    })
+    }
+    (traj, bs, uhs, urs) = run(shared)
     f, a = plt.subplots(1)
     plot_beliefs(a, bs)
     f.suptitle("Shared Autonomy Beliefs")
@@ -478,18 +496,19 @@ def anca(start, goals):
     f.savefig("shared_traj")
 
     for lam in [1,20,100]:
-        (traj, bs) = run({
-            "start": start,
-            "goals": goals,
+        conf = {
+            "start": start.tolist(),
+            "goals": goals.tolist(),
             "true_goal": 0,
-            "prior": np.array([0.5, 0.5]),
+            "prior": np.array([0.5, 0.5]).tolist(),
             "likelihood": "boltzmann",
             "human": "optimal",
             "robot": "active",
             "robot_params": {
                 "lambda": lam,
             },
-        })
+        }
+        (traj, bs, uhs, urs) = run(conf)
         f, a = plt.subplots(1)
         plot_beliefs(a, bs)
         f.suptitle("Active Beliefs Lambda = " + repr(lam))
@@ -517,7 +536,9 @@ if __name__ == '__main__':
     start = np.array([0, .5])
 
     #anca(start, goals)
+    #plt.show()
 
+    """
     f, (a1, a2) = plt.subplots(1, 2, sharex=False, sharey=False, figsize = (9, 4))
     (t, b) = simulate(start, goals, 0, lazy, shared_sampled(lazylike, lazy))
     visualize(a1, start, goals, trajectories=[t], c="k")
@@ -526,8 +547,6 @@ if __name__ == '__main__':
     f, a = plt.subplots(1)
     compare_beliefs(a, [b, b1], labels=["shared", "active"])
     plt.show()
-
-    """
 
     shared_ts = []
     active_ts = []
