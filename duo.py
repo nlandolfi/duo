@@ -4,6 +4,9 @@ import matplotlib.pyplot as plt
 norm = np.linalg.norm
 
 def angle_between(v1, v2):
+    if norm(v1) == 0 or norm(v2) == 0:
+        return 0.
+
     v1_u = v1 / norm(v1)
     v2_u = v2 / norm(v2)
     return np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
@@ -363,7 +366,7 @@ def simulate(start, goals, true_goal, Fu_h, Fu_r, prior=None, alpha=0.1, maxiter
 
     trajectory = [current]
     belief_hist = [beliefs]
-    u_rs = [0.0]
+    u_rs = [np.array([0.0, 0.0])]
 
     iters = 0
     while norm(current - goal) > alpha and iters < maxiters:
@@ -512,9 +515,8 @@ if __name__ == '__main__':
     ])
     start = np.array([0, .5])
 
-    anca(start, goals)
+    #anca(start, goals)
 
-    """
     f, (a1, a2) = plt.subplots(1, 2, sharex=False, sharey=False, figsize = (9, 4))
     (t, b) = simulate(start, goals, 0, lazy, shared_sampled(lazylike, lazy))
     visualize(a1, start, goals, trajectories=[t], c="k")
@@ -523,6 +525,8 @@ if __name__ == '__main__':
     f, a = plt.subplots(1)
     compare_beliefs(a, [b, b1], labels=["shared", "active"])
     plt.show()
+
+    """
 
     shared_ts = []
     active_ts = []
