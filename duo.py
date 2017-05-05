@@ -5,7 +5,8 @@ norm = np.linalg.norm
 
 def angle_between(v1, v2):
     if norm(v1) == 0 or norm(v2) == 0:
-        return 0.
+        return np.pi
+        #return 0.
 
     v1_u = v1 / norm(v1)
     v2_u = v2 / norm(v2)
