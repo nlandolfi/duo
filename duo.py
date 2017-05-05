@@ -123,11 +123,13 @@ def pull_back(past_u_r, state, goal, alpha):
     center = - past_u_r + optimal(state - past_u_r, goal, alpha)
     return alpha*center/norm(center)
 
-def lazy(state, goal, past_u_r, alpha):
-    if is_almost_optimal(past_u_r, state, goal, alpha):
-        return np.zeros(past_u_r.shape)
-    else:
-        return pull_back(past_u_r, state, goal, alpha)
+def lazy(threshold):
+    def lazy(state, goal, past_u_r, alpha):
+        if is_almost_optimal(past_u_r, state, goal, alpha, threshold=threshold):
+            return np.zeros(past_u_r.shape)
+        else:
+            return pull_back(past_u_r, state, goal, alpha)
+    return lazy
 
 # }}}
 
@@ -141,16 +143,18 @@ def boltzmann(beta=1.0):
                     )
     return likelihood
 
-def lazylike(state, u_h, past_u_r, goal, alpha):
-    if is_almost_optimal(past_u_r, state, goal, alpha):
-        if np.alltrue(np.allclose(u_h, np.zeros(u_h.shape))):
-            return 1.0 - 1e-10
+def lazylike(threshold):
+    def lazylike(state, u_h, past_u_r, goal, alpha):
+        if is_almost_optimal(past_u_r, state, goal, alpha, threshold=threshold):
+            if np.alltrue(np.allclose(u_h, np.zeros(u_h.shape))):
+                return 1.0 - 1e-10
+            else:
+                return 0.0 + 1e-10
         else:
-            return 0.0 + 1e-10
-    else:
-        return gaussian(0, np.pi/4)(
-                angle_between(pull_back(past_u_r, state, goal, alpha), u_h)
-        )
+            return gaussian(0, np.pi/4)(
+                    angle_between(pull_back(past_u_r, state, goal, alpha), u_h)
+            )
+    return lazylike
 
 def update(state, u_h, past_u_r, goals, beliefs, alpha, likelihood=boltzmann(1.0)):
     """
@@ -410,7 +414,7 @@ def center(a, cx=0., cy=0., wx=2., wy=2.):
     a.set_xlim(cx-wx/2., cx+wx/2.)
     a.set_ylim(cy-wy/2., cy+wy/2.)
 
-def visualize(a, start, goals, trajectories=None, c = "r"):
+def visualize(a, start, goals, trajectories=None, u_hs=None, c = "r"):
     """
         plots the start and goals and trajectory if provided
         on a 2D canvas
@@ -422,12 +426,16 @@ def visualize(a, start, goals, trajectories=None, c = "r"):
     for goal in goals:
         a.plot(goal[0], goal[1], 'go')
 
-    if trajectories is None:
-        return
+    if trajectories is not None:
+        for trajectory in trajectories:
+            for q in trajectory:
+                a.plot(q[0], q[1], c+'o', alpha=1.0/len(trajectories))
 
-    for trajectory in trajectories:
-        for q in trajectory:
-            a.plot(q[0], q[1], c+'o', alpha=1.0/len(trajectories))
+    if u_hs is not None and trajectories is not None:
+        for u_h, t in zip(u_hs, trajectories):
+            for i in range(len(u_h)):
+                if not np.allclose(u_h[i], np.zeros(u_h[i].shape)):
+                    a.arrow(t[i][0], t[i][1], u_h[i][0], u_h[i][1], fc="m")
 
 def plot_beliefs(a, beliefs, labels=None):
     """
@@ -491,7 +499,7 @@ def anca(start, goals):
     f.suptitle("Shared Autonomy Beliefs")
     f.savefig("shared_beliefs")
     f, a = plt.subplots(1)
-    visualize(a, start, goals, trajectories=[traj])
+    visualize(a, start, goals, trajectories=[traj], u_hs=[uhs])
     f.suptitle("Shared Autonomy")
     f.savefig("shared_traj")
 
@@ -514,7 +522,7 @@ def anca(start, goals):
         f.suptitle("Active Beliefs Lambda = " + repr(lam))
         f.savefig("active_beliefs_lambda="+repr(lam))
         f, a = plt.subplots(1)
-        visualize(a, start, goals, trajectories=[traj])
+        visualize(a, start, goals, trajectories=[traj], u_hs=[uhs])
         f.suptitle("Active Traj Lambda = " + repr(lam))
         f.savefig("active_traj_lambda="+repr(lam))
 
@@ -538,15 +546,19 @@ if __name__ == '__main__':
     #anca(start, goals)
     #plt.show()
 
-    """
+    thre = np.pi/2
     f, (a1, a2) = plt.subplots(1, 2, sharex=False, sharey=False, figsize = (9, 4))
-    (t, b) = simulate(start, goals, 0, lazy, shared_sampled(lazylike, lazy))
-    visualize(a1, start, goals, trajectories=[t], c="k")
-    (t, b1) = simulate(start, goals, 0, lazy, active(lazylike, lazy, 100))
-    visualize(a2, start, goals, trajectories=[t], c="r")
+    (t, b, uh, ur) = simulate(start, goals, 0, lazy(thre), shared_sampled(lazylike(thre), lazy(thre)))
+    print(uh)
+    visualize(a1, start, goals, trajectories=[t], u_hs=[uh], c="k")
+    (t, b1, uh, ur) = simulate(start, goals, 0, lazy(thre), active(lazylike(thre), lazy(thre), 100))
+    print(uh)
+    visualize(a2, start, goals, trajectories=[t], u_hs=[uh], c="r")
     f, a = plt.subplots(1)
     compare_beliefs(a, [b, b1], labels=["shared", "active"])
     plt.show()
+
+    """
 
     shared_ts = []
     active_ts = []
