@@ -2,6 +2,7 @@ import json
 
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm
 
 norm = np.linalg.norm
 
@@ -409,6 +410,8 @@ def simulate(start, goals, true_goal, Fu_h, Fu_r, prior=None, alpha=0.1, maxiter
 
 # plotting {{{
 
+palatino = fm.FontProperties(fname="./.Palatino-Roman.ttf")
+
 def center(a, cx=0., cy=0., wx=2., wy=2.):
     """ centers an axis object """
     a.set_xlim(cx-wx/2., cx+wx/2.)
@@ -421,21 +424,34 @@ def visualize(a, start, goals, trajectories=None, u_hs=None, c = "r"):
 
         use to visualize the results of simulate
     """
-    center(a, 0.25, 0.25)
-    a.plot(start[0], start[1], 'bo')
+    a.axis('off')
+    center(a, 0.5, 0.5, 1.1, 1.1)
+
+    a.plot(start[0], start[1], 'co', alpha=0.5,
+            markeredgewidth=0, markersize=14.0)
     for goal in goals:
-        a.plot(goal[0], goal[1], 'go')
+        a.plot(goal[0], goal[1], 'go', alpha=0.5,
+            markeredgewidth=0, markersize=14.0)
 
     if trajectories is not None:
         for trajectory in trajectories:
             for q in trajectory:
-                a.plot(q[0], q[1], c+'o', alpha=1.0/len(trajectories))
+                a.plot(q[0], q[1],
+                        c+'o', alpha=1.0/len(trajectories),
+                        markeredgewidth=0, markersize=7.0)
 
     if u_hs is not None and trajectories is not None:
         for u_h, t in zip(u_hs, trajectories):
             for i in range(len(u_h)):
                 if not np.allclose(u_h[i], np.zeros(u_h[i].shape)):
-                    a.arrow(t[i][0], t[i][1], u_h[i][0], u_h[i][1], fc="m")
+                    a.arrow(t[i][0], t[i][1], u_h[i][0], u_h[i][1], fc="k")
+
+def slick(a):
+    a.spines['right'].set_visible(False)
+    a.spines['top'].set_visible(False)
+    a.xaxis.set_ticks_position('bottom')
+    a.yaxis.set_ticks_position('left')
+    a.tick_params(axis='x', which='both', bottom='off', top='off', labelbottom='off')
 
 def plot_beliefs(a, beliefs, labels=None):
     """
@@ -444,6 +460,8 @@ def plot_beliefs(a, beliefs, labels=None):
 
         labels are "Goal i" if they aren't provided
     """
+    slick(a)
+    a.set_ylim([0, 1.05])
     for i in range(beliefs.shape[1]):
         if labels is None:
             label = "Goal " + repr(i)
@@ -451,9 +469,12 @@ def plot_beliefs(a, beliefs, labels=None):
             label = labels[i]
 
         a.plot(beliefs[:,i], label=label)
-    a.legend()
+    a.legend(prop=palatino)
 
 def compare_beliefs(a, belief_sets, goal=0, labels=None):
+    slick(a)
+    a.set_ylim([0, 1.05])
+    a.set_ylabel("belief")
     for i in range(len(belief_sets)):
         if labels is None:
             label = "Belief " + repr(i)
@@ -461,7 +482,7 @@ def compare_beliefs(a, belief_sets, goal=0, labels=None):
             label = labels[i]
 
         a.plot(belief_sets[i][:,goal], label=label)
-    a.legend()
+    a.legend(prop=palatino)
 
 # }}}
 
@@ -480,8 +501,8 @@ def anca(start, goals):
     }
     (traj, bs, uhs, urs) = run(teleop)
     f, a = plt.subplots(1)
-    visualize(a, start, goals, trajectories=[traj])
-    f.suptitle("Teleop")
+    visualize(a, start, goals, trajectories=[traj], u_hs=[uhs])
+    f.suptitle("Teleop", fontproperties=palatino)
     f.savefig("teleop_traj")
 
     shared = {
@@ -546,19 +567,20 @@ if __name__ == '__main__':
     #anca(start, goals)
     #plt.show()
 
-    thre = np.pi/2
-    f, (a1, a2) = plt.subplots(1, 2, sharex=False, sharey=False, figsize = (9, 4))
-    (t, b, uh, ur) = simulate(start, goals, 0, lazy(thre), shared_sampled(lazylike(thre), lazy(thre)))
-    print(uh)
-    visualize(a1, start, goals, trajectories=[t], u_hs=[uh], c="k")
-    (t, b1, uh, ur) = simulate(start, goals, 0, lazy(thre), active(lazylike(thre), lazy(thre), 100))
-    print(uh)
-    visualize(a2, start, goals, trajectories=[t], u_hs=[uh], c="r")
-    f, a = plt.subplots(1)
-    compare_beliefs(a, [b, b1], labels=["shared", "active"])
-    plt.show()
-
+    for thre in [np.pi/2, np.pi/4, np.pi/8]:
+        f, (a1, a2) = plt.subplots(1, 2, sharex=False, sharey=False, figsize = (9, 4))
+        (t, b, uh, ur) = simulate(start, goals, 0, lazy(thre), shared_sampled(lazylike(thre), lazy(thre)), prior=np.array([0.2, 0.8]))
+        print(uh)
+        visualize(a1, start, goals, trajectories=[t], u_hs=[uh], c="k")
+        (t, b1, uh, ur) = simulate(start, goals, 0, lazy(thre), active(lazylike(thre), lazy(thre), 100), prior=np.array([0.2, 0.8]))
+        print(uh)
+        visualize(a2, start, goals, trajectories=[t], u_hs=[uh], c="r")
+        f, a = plt.subplots(1)
+        compare_beliefs(a, [b, b1], labels=["shared", "active"])
+        plt.show()
+        break
     """
+
 
     shared_ts = []
     active_ts = []
