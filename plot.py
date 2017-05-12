@@ -1,3 +1,4 @@
+import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 
@@ -9,6 +10,13 @@ def center(a, cx=0., cy=0., wx=2., wy=2.):
     """
     a.set_xlim(cx-wx/2., cx+wx/2.)
     a.set_ylim(cy-wy/2., cy+wy/2.)
+
+def slick(a):
+    a.spines['right'].set_visible(False)
+    a.spines['top'].set_visible(False)
+    a.xaxis.set_ticks_position('bottom')
+    a.yaxis.set_ticks_position('left')
+    a.tick_params(axis='x', which='both', bottom='off', top='off', labelbottom='off')
 
 def visualize(a, start, goals, trajectories=None, u_hs=None, c = "r"):
     """
@@ -39,12 +47,6 @@ def visualize(a, start, goals, trajectories=None, u_hs=None, c = "r"):
                 if not np.allclose(u_h[i], np.zeros(u_h[i].shape)):
                     a.arrow(t[i][0], t[i][1], u_h[i][0], u_h[i][1], fc="k")
 
-def slick(a):
-    a.spines['right'].set_visible(False)
-    a.spines['top'].set_visible(False)
-    a.xaxis.set_ticks_position('bottom')
-    a.yaxis.set_ticks_position('left')
-    a.tick_params(axis='x', which='both', bottom='off', top='off', labelbottom='off')
 
 def plot_beliefs(a, beliefs, labels=None):
     """
@@ -76,5 +78,3 @@ def compare_beliefs(a, belief_sets, goal=0, labels=None):
 
         a.plot(belief_sets[i][:,goal], label=label)
     a.legend(prop=palatino)
-
-# }}}
