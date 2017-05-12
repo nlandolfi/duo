@@ -4,6 +4,7 @@ import imp
 import matplotlib.pyplot as plt
 
 import sim
+import plot
 
 def run(experiment):
     if "name" not in experiment:
@@ -20,12 +21,12 @@ def run(experiment):
     if len(experiment["plots"]) == 0:
         return
 
-    search = imp.find_module(experiment["name"], ["./"])
+    search = imp.find_module(experiment["name"], ["./experiments/"])
     m = imp.load_module(experiment["name"], *search)
 
-    for plot in experiment["plots"]:
-        f = getattr(m, plot)(plt, results)
-        f.savefig("plots/" + plot)
+    for p in experiment["plots"]:
+        f = getattr(m, p)(plt, plot, results)
+        f.savefig("plots/" + experiment["name"] + "-" + p)
 
 if __name__ == '__main__':
     run(sim.load(sys.argv[1]))
