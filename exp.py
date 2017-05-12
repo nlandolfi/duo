@@ -9,7 +9,7 @@ import plot
 def replace(d, var):
     for key in d:
         val = d[key]
-        if type(val) == str and val[0] == "$":
+        if (type(val) == str or type(val) == unicode) and val[0] == "$":
             d[key] = var[val]
         if type(val) == dict:
             replace(val, var)

@@ -18,6 +18,13 @@ def slick(a):
     a.yaxis.set_ticks_position('left')
     a.tick_params(axis='x', which='both', bottom='off', top='off', labelbottom='off')
 
+def vis(a, result):
+    return visualize(a,
+        result["conditions"]["start"],
+        result["conditions"]["goals"],
+        trajectories=[result["trajectory"]],
+        u_hs=[result["u_h"]])
+
 def visualize(a, start, goals, trajectories=None, u_hs=None, c = "r"):
     """
         plots the start and goals and trajectory if provided
@@ -66,15 +73,20 @@ def plot_beliefs(a, beliefs, labels=None):
         a.plot(beliefs[:,i], label=label)
     a.legend(prop=palatino)
 
-def compare_beliefs(a, belief_sets, goal=0, labels=None):
+def compare_beliefs(a, belief_sets, goal=0, labels=None, colors=None, legend=True):
     slick(a)
     a.set_ylim([0, 1.05])
-    a.set_ylabel("belief")
+    a.set_ylabel("belief", fontproperties=palatino)
     for i in range(len(belief_sets)):
         if labels is None:
             label = "Belief " + repr(i)
         else:
             label = labels[i]
 
-        a.plot(belief_sets[i][:,goal], label=label)
-    a.legend(prop=palatino)
+        if colors is not None:
+            c = colors[i]
+        else:
+            c = None
+        a.plot(belief_sets[i][:,goal], label=label, c=c)
+    if legend:
+        a.legend(prop=palatino)

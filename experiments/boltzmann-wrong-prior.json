@@ -1,0 +1,62 @@
+{
+    "name": "boltzmann-wrong-prior",
+    "variables": {
+        "passive0.1": {
+            "$robot": "shared",
+            "$robot_params": {},
+            "$prior": [ 0.1, 0.9 ]
+        },
+        "active0.1":  {
+            "$robot": "active",
+            "$robot_params": { "lambda": 50 },
+            "$prior": [ 0.1, 0.9 ]
+        },
+        "passive0.2": {
+            "$robot": "shared",
+            "$robot_params": {},
+            "$prior": [ 0.2, 0.8 ]
+        },
+        "active0.2":  {
+            "$robot": "active",
+            "$robot_params": { "lambda": 50 },
+            "$prior": [ 0.2, 0.8 ]
+        },
+        "passive0.3": {
+            "$robot": "shared",
+            "$robot_params": {},
+            "$prior": [ 0.3, 0.7 ]
+        },
+        "active0.3":  {
+            "$robot": "active",
+            "$robot_params": { "lambda": 50 },
+            "$prior": [ 0.3, 0.7 ]
+        },
+        "passive0.4": {
+            "$robot": "shared",
+            "$robot_params": {},
+            "$prior": [ 0.4, 0.6 ]
+        },
+        "active0.4":  {
+            "$robot": "active",
+            "$robot_params": { "lambda": 50 },
+            "$prior": [ 0.4, 0.6 ]
+        }
+    },
+    "conditions": {
+        "start": [ 0.0, 0.5 ],
+        "goals": [
+            [ 1, 1 ],
+            [ 1, 0 ]
+        ],
+        "true_goal": 0,
+        "prior": "$prior",
+        "human": "optimal",
+        "robot": "$robot",
+        "robot_params": "$robot_params",
+        "likelihood": "boltzmann",
+        "likelihood_params": {
+            "temperature": 1.0
+        }
+    },
+    "plots": ["compare"]
+}
