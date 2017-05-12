@@ -6,6 +6,23 @@ import matplotlib.pyplot as plt
 import sim
 import plot
 
+def replace(d, var):
+    for key in d:
+        val = d[key]
+        if type(val) == str and val[0] == "$":
+            d[key] = var[val]
+        if type(val) == dict:
+            replace(val, var)
+        if type(val) == list:
+            for (i, v) in enumerate(val):
+                if type(v) == str and v[0] == "$":
+                    val[i] = var[v]
+
+def expand(ic, variable_set):
+    nic = ic.copy()
+    replace(nic, variable_set)
+    return nic
+
 def run(experiment):
     if "name" not in experiment:
         raise Exception()
@@ -13,10 +30,21 @@ def run(experiment):
     if "conditions" not in experiment:
         raise Exception()
 
+    if "variables" not in experiment:
+        raise Exception()
+
     if "plots" not in experiment:
         raise Exception()
 
-    results = sim.run(experiment["conditions"])
+    vs = experiment["variables"]
+    cs = experiment["conditions"]
+
+    if len(experiment["variables"]) == 0:
+        ics = [("default", cs)]
+    else:
+        ics = [(name, expand(cs, vs[name])) for name in vs]
+
+    results = {name: sim.run(c) for (name, c) in ics}
 
     if len(experiment["plots"]) == 0:
         return

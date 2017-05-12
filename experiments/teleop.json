@@ -1,5 +1,9 @@
 {
     "name": "teleop",
+    "variables": {
+        "low": { "$temperature": 0.1 },
+        "hi":  { "$temperature": 0.2 }
+    },
     "conditions": {
         "prior": [ 0.5, 0.5 ],
         "true_goal": 0,
@@ -12,7 +16,7 @@
         "human": "optimal",
         "likelihood": "boltzmann",
         "likelihood_params": {
-            "temperature": 1.0
+            "temperature": "$temperature"
         }
     },
     "plots": ["basic"]
