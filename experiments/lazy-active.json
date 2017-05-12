@@ -1,0 +1,21 @@
+{
+    "start": [ 0.0, 0.5 ],
+    "goals": [
+        [ 1, 1 ],
+        [ 1, 0 ]
+    ],
+    "true_goal": 0,
+    "prior": [ 1.5, 0.5 ],
+    "human": "lazy",
+    "human_params": {
+        "threshold": 0.7
+    },
+    "likelihood": "lazy",
+    "likelihood_params": {
+        "threshold": 0.7
+    },
+    "robot": "active",
+    "robot_params": {
+        "lambda": 100
+    }
+}
