@@ -1,0 +1,45 @@
+{
+    "name": "lazy-diff-threshold",
+    "variables": {
+        "passivepiby8": {
+            "$robot": "shared",
+            "$robot_params": {},
+            "$threshold": 0.3926990817
+        },
+        "activepiby8":  {
+            "$robot": "active",
+            "$robot_params": { "lambda": 50 },
+            "$threshold": 0.3926990817
+        },
+        "passivepiby2": {
+            "$robot": "shared",
+            "$robot_params": {},
+            "$threshold": 1.5707963268
+        },
+        "activepiby2":  {
+            "$robot": "active",
+            "$robot_params": { "lambda": 50 },
+            "$threshold": 1.5707963268
+        }
+    },
+    "conditions": {
+        "start": [ 0.0, 0.5 ],
+        "goals": [
+            [ 1, 1 ],
+            [ 1, 0 ]
+        ],
+        "true_goal": 0,
+        "prior": [0.5, 0.5],
+        "human": "lazy",
+        "human_params": {
+            "threshold": "$threshold"
+        },
+        "robot": "$robot",
+        "robot_params": "$robot_params",
+        "likelihood": "lazy",
+        "likelihood_params": {
+            "threshold": "$threshold"
+        }
+    },
+    "plots": ["passivepiby8", "activepiby8", "passivepiby2", "activepiby2", "beliefspiby8", "beliefspiby2"]
+}
