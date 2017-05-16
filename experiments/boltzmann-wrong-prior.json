@@ -55,8 +55,8 @@
         "robot_params": "$robot_params",
         "likelihood": "boltzmann",
         "likelihood_params": {
-            "temperature": 1.0
+            "temperature": 2.0
         }
     },
-    "plots": ["compare"]
+    "plots": ["compare", "passive01", "passive02", "passive03", "passive04", "active01", "active02", "active03", "active04", "beliefs01", "beliefs02", "beliefs03", "beliefs04"]
 }

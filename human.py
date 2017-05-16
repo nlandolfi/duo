@@ -36,7 +36,7 @@ def pull_back(alpha, state, goal, u_r):
         given that the robot's action was not almost optimal,
         how should the human react?
     """
-    center = - u_r + optimal(state - u_r, goal, alpha)
+    center = - u_r + optimal(alpha, state, goal)
     return alpha*center/geo.norm(center)
 
 def looks_almost_optimal(alpha, state, goal, past_u_r, threshold):

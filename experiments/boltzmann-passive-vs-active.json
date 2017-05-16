@@ -1,5 +1,5 @@
 {
-    "name": "passive-vs-active",
+    "name": "boltzmann-passive-vs-active",
     "variables": {
         "passive": {
             "$robot": "shared",
@@ -23,8 +23,8 @@
         "robot_params": "$robot_params",
         "likelihood": "boltzmann",
         "likelihood_params": {
-            "temperature": 1.0
+            "temperature": 2.0
         }
     },
-    "plots": ["compare"]
+    "plots": ["compare", "passive", "active", "beliefs"]
 }

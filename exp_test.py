@@ -11,6 +11,11 @@ def test_replace():
             "start": {"robot": u'$robot'},
             "vars": {"$robot": u'active' },
             "end": {"robot": "active" },
+        },
+        {
+            "start": {"likelihood_params": { "temperature": "$temperature" } },
+            "vars": {"$temperature": 10.0 },
+            "end": {"likelihood_params": { "temperature": 10.0 } },
         }
     ]
 

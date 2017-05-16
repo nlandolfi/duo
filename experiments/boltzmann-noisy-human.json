@@ -1,0 +1,34 @@
+{
+    "name": "boltzmann-noisy-human",
+    "repetitions": 30,
+    "variables": {
+        "passive": {
+            "$robot": "shared",
+            "$robot_params": {}
+        },
+        "active":  {
+            "$robot": "active",
+            "$robot_params": { "lambda": 50 }
+        }
+    },
+    "conditions": {
+        "start": [ 0.0, 0.5 ],
+        "goals": [
+            [ 1, 1 ],
+            [ 1, 0 ]
+        ],
+        "true_goal": 0,
+        "prior": [ 0.5, 0.5 ],
+        "human": "optimal",
+        "human_params": {
+            "variance": 0.05
+        },
+        "robot": "$robot",
+        "robot_params": "$robot_params",
+        "likelihood": "boltzmann",
+        "likelihood_params": {
+            "temperature": 2.0
+        }
+    },
+    "plots": ["passive", "active", "beliefs"]
+}

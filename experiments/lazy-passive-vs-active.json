@@ -1,0 +1,33 @@
+{
+    "name": "lazy-passive-vs-active",
+    "variables": {
+        "passive": {
+            "$robot": "shared",
+            "$robot_params": {}
+        },
+        "active":  {
+            "$robot": "active",
+            "$robot_params": { "lambda": 50 }
+        }
+    },
+    "conditions": {
+        "start": [ 0.0, 0.5 ],
+        "goals": [
+            [ 1, 1 ],
+            [ 1, 0 ]
+        ],
+        "true_goal": 0,
+        "prior": [ 0.5, 0.5 ],
+        "human": "lazy",
+        "human_params": {
+            "threshold": 0.785
+        },
+        "robot": "$robot",
+        "robot_params": "$robot_params",
+        "likelihood": "lazy",
+        "likelihood_params": {
+            "threshold": 0.785
+        }
+    },
+    "plots": ["compare", "beliefs"]
+}

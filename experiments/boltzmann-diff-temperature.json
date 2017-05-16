@@ -1,0 +1,42 @@
+{
+    "name": "boltzmann-diff-temperature",
+    "variables": {
+        "passivelo": {
+            "$robot": "shared",
+            "$robot_params": {},
+            "$temperature": 0.5
+        },
+        "activelo":  {
+            "$robot": "active",
+            "$robot_params": { "lambda": 50 },
+            "$temperature": 0.5
+        },
+        "passivehi": {
+            "$robot": "shared",
+            "$robot_params": {},
+            "$temperature": 10.0
+        },
+        "activehi":  {
+            "$robot": "active",
+            "$robot_params": { "lambda": 50 },
+            "$temperature": 10.0
+        }
+    },
+    "conditions": {
+        "start": [ 0.0, 0.5 ],
+        "goals": [
+            [ 1, 1 ],
+            [ 1, 0 ]
+        ],
+        "true_goal": 0,
+        "prior": [0.5, 0.5],
+        "human": "optimal",
+        "robot": "$robot",
+        "robot_params": "$robot_params",
+        "likelihood": "boltzmann",
+        "likelihood_params": {
+            "temperature": "$temperature"
+        }
+    },
+    "plots": ["compare"]
+}
