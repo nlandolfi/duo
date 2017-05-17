@@ -1,10 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
+import matplotlib.patches as mpatches
 
 import duo
 
 palatino = fm.FontProperties(fname="./.Palatino-Roman.ttf")
+palatino.set_size(20.0)
 
 LIGHT_GRAY = (.6, .6, .6)
 DARK_GRAY  = (.4, .4, .4)
@@ -23,6 +25,7 @@ def center(a, cx=0., cy=0., wx=2., wy=2.):
 def slick(a):
     a.spines['right'].set_visible(False)
     a.spines['top'].set_visible(False)
+    a.spines['bottom'].set_visible(False)
     a.xaxis.set_ticks_position('bottom')
     a.yaxis.set_ticks_position('left')
     a.tick_params(axis='x', which='both', bottom='off', top='off', labelbottom='off')
@@ -34,7 +37,7 @@ def vis(a, result, **vargs):
         trajectories=[result["trajectory"]],
         u_hs=[result["u_h"]], **vargs)
 
-def visualize(a, start, goals, trajectories=None, u_hs=None, c = "r"):
+def visualize(a, start, goals, trajectories=None, u_hs=None, c = "r", true_goal=0):
     """
         plots the start and goals and trajectory if provided
         on a 2D canvas
@@ -43,11 +46,15 @@ def visualize(a, start, goals, trajectories=None, u_hs=None, c = "r"):
     """
     a.axis('off')
     center(a, 0.5, 0.5, 1.1, 1.1)
+    a.set_aspect('equal', 'datalim')
 
-    a.plot(start[0], start[1], 'co', alpha=0.5,
+    a.plot(start[0], start[1], 'co', alpha=1.0,
             markeredgewidth=0, markersize=14.0)
-    for goal in goals:
-        a.plot(goal[0], goal[1], 'go', alpha=0.5,
+    for (i,goal) in enumerate(goals):
+        alpha = 1.0
+        if i != true_goal:
+            alpha = alpha / 3.0
+        a.plot(goal[0], goal[1], 'go', alpha=alpha,
             markeredgewidth=0, markersize=14.0)
 
     if trajectories is not None:
@@ -84,8 +91,11 @@ def plot_beliefs(a, beliefs, labels=None):
 
 def compare_beliefs(a, belief_sets, goal=0, labels=None, colors=None, legend=True, multi=False):
     slick(a)
-    a.set_ylim([0, 1.05])
-    a.set_ylabel("$b(\\theta = \\theta^{top})$", fontproperties=palatino, fontsize=18)
+    a.set_ylabel("$b(\\theta = \\theta^{top})$", fontproperties=palatino, fontsize=20)
+    a.set_ylim([-0.04, 1.04])
+
+    patches = []
+
     for i in range(len(belief_sets)):
         if labels is None:
             label = "Belief " + repr(i)
@@ -96,6 +106,9 @@ def compare_beliefs(a, belief_sets, goal=0, labels=None, colors=None, legend=Tru
             c = colors[i]
         else:
             c = None
+
+        if colors is not None and labels is not None:
+            patches.append(mpatches.Patch(color=c, label=label))
 
         if multi:
             data = [b[:, goal] for b in belief_sets[i]]
@@ -109,6 +122,12 @@ def compare_beliefs(a, belief_sets, goal=0, labels=None, colors=None, legend=Tru
                     yerr=np.std(data_trunc),
                     label=label, c=c)
         else:
-            a.plot(belief_sets[i][:,goal], label=label, c=c)
+            a.plot(belief_sets[i][:,goal], label=label, c=c, linewidth=2.0)
     if legend:
-        a.legend(prop=palatino, loc=4)
+        if len(patches) > 0:
+            a.legend(handles=patches, prop=palatino, loc=4,
+                    markerfirst=False,
+                    framealpha=0,
+                    fontsize=20)
+        else:
+            a.legend(prop=palatino, loc=4, markerfirst=False)

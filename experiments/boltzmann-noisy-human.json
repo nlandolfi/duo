@@ -30,5 +30,5 @@
             "temperature": 2.0
         }
     },
-    "plots": ["passive", "active", "beliefs"]
+    "plots": ["compare", "passive", "active", "beliefs"]
 }

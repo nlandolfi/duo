@@ -1,12 +1,23 @@
-
 def compare(plt, plot, results):
-    f, (a1, a2) = plt.subplots(1, 2)
-    a1.set_aspect('equal', 'datalim')
-    a2.set_aspect('equal', 'datalim')
-    plot.vis(a1, results["passive"])
-    plot.vis(a2, results["active"])
-    f.suptitle("Passive vs. Active")
+    f = plt.figure(figsize=(8, 6))
+
+    a1 = f.add_subplot(221)
+    a2 = f.add_subplot(222)
+
+    plot.vis(a1, results["passive"], c = plot.PASSIVE)
+    plot.vis(a2, results["active"], c = plot.ACTIVE)
+
+    a3 = f.add_subplot(212)
+    plot.compare_beliefs(a3,
+            [results["passive"]["beliefs"],
+             results["active"]["beliefs"]],
+            goal = 0,
+            labels=["Passive Inference", "Active Inference"],
+            colors=[plot.PASSIVE, plot.ACTIVE])
+
+    plt.tight_layout(h_pad=3.0)
     return f
+
 
 def beliefs(plt, plot, results):
     f, a = plt.subplots()

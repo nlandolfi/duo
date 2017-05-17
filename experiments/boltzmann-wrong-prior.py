@@ -1,14 +1,21 @@
 def compare(plt, plot, results):
-    f, a = plt.subplots(3, 4)
+    f, a = plt.subplots(
+            nrows=3,
+            ncols=4,
+            figsize=(16, 8),
+            )
     for (j, base) in enumerate(["0.1", "0.2", "0.3", "0.4"]):
         rp = results["passive" + base]
-        plot.vis(a[0,j], rp)
-        a[0,j].set_aspect('equal', 'datalim')
+        plot.vis(a[0,j], rp, c=plot.PASSIVE)
+        #a[0,j].set_aspect('equal', 'datalim')
         ra = results["active" + base]
-        plot.vis(a[1,j], ra)
-        a[1,j].set_aspect('equal', 'datalim')
-        plot.compare_beliefs(a[2,j], [rp["beliefs"], ra["beliefs"]], goal=0, labels=["passive", "active"], colors=["k", "r"], legend=False)
-    f.suptitle("Boltzmann Wrong Prior")
+        plot.vis(a[1,j], ra, c=plot.ACTIVE)
+        #a[1,j].set_aspect('equal', 'datalim')
+        plot.compare_beliefs(a[2,j],
+                [rp["beliefs"], ra["beliefs"]], goal=0, labels=["Passive Inference", "Active Inference"],
+                colors=[plot.PASSIVE, plot.ACTIVE],
+                legend=False)
+    plt.tight_layout()
     return f
 
 def compare3(plt, plot, results):

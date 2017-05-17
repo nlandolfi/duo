@@ -58,5 +58,5 @@
             "temperature": 2.0
         }
     },
-    "plots": ["compare", "passive01", "passive02", "passive03", "passive04", "active01", "active02", "active03", "active04", "beliefs01", "beliefs02", "beliefs03", "beliefs04"]
+    "plots": ["compare", "compare3", "passive01", "passive02", "passive03", "passive04", "active01", "active02", "active03", "active04", "beliefs01", "beliefs02", "beliefs03", "beliefs04"]
 }
