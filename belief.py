@@ -55,7 +55,7 @@ def lazy(threshold):
                 return 0.0 + 1e-10
         else:
             return gaussian(0, np.pi/4)(
-                    geo.angle_between(human.pull_back(past_u_r, state, goal, alpha), u_h)
+                    geo.angle_between(human.pull_back(alpha, state, goal, past_u_r), u_h)
             )
     return lazylike
 
