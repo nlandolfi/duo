@@ -41,5 +41,5 @@
             "threshold": "$threshold"
         }
     },
-    "plots": ["compare", "passivepiby8", "activepiby8", "passivepiby2", "activepiby2", "beliefspiby8", "beliefspiby2"]
+    "plots": ["compare", "compareshort", "comparestack", "passivepiby8", "activepiby8", "passivepiby2", "activepiby2", "beliefspiby8", "beliefspiby2"]
 }

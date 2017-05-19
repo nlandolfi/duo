@@ -7,6 +7,8 @@ import human
 import robot
 import belief
 
+np.random.seed(111)
+
 HUMAN_OPTIMAL = "optimal"
 HUMAN_LAZY    = "lazy"
 

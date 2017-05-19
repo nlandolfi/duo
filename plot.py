@@ -89,9 +89,12 @@ def plot_beliefs(a, beliefs, labels=None):
         a.plot(beliefs[:,i], label=label)
     a.legend(prop=palatino)
 
-def compare_beliefs(a, belief_sets, goal=0, labels=None, colors=None, legend=True, multi=False):
+def compare_beliefs(a, belief_sets, goal=0, labels=None, colors=None, legend=True, multi=False, fontsize=20):
+    print("warning setting global palatino font size")
+    # TODO: fix
+    palatino.set_size(fontsize)
     slick(a)
-    a.set_ylabel("$b(\\theta = \\theta^{top})$", fontproperties=palatino, fontsize=20)
+    a.set_ylabel("$b(\\theta = \\theta^{top})$", fontproperties=palatino, fontsize=fontsize)
     a.set_ylim([-0.04, 1.04])
 
     patches = []
@@ -119,7 +122,7 @@ def compare_beliefs(a, belief_sets, goal=0, labels=None, colors=None, legend=Tru
             a.errorbar(
                     range(np.max([len(b) for b in belief_sets[i]])),
                     duo.mean(data),
-                    yerr=np.std(data_trunc),
+                    yerr=np.std(data_trunc)/np.sqrt(len(data)),
                     label=label, c=c)
         else:
             a.plot(belief_sets[i][:,goal], label=label, c=c, linewidth=2.0)
@@ -128,6 +131,6 @@ def compare_beliefs(a, belief_sets, goal=0, labels=None, colors=None, legend=Tru
             a.legend(handles=patches, prop=palatino, loc=4,
                     markerfirst=False,
                     framealpha=0,
-                    fontsize=20)
+                    fontsize=fontsize)
         else:
             a.legend(prop=palatino, loc=4, markerfirst=False)

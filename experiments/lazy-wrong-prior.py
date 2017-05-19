@@ -31,6 +31,29 @@ def compare3(plt, plot, results):
     plt.tight_layout(pad=0.0)
     return f
 
+def comparestack(plt, plot, results):
+    f, a = plt.subplots(3, 3,
+            figsize=(11, 12))
+    for (j, base) in enumerate(["0.1", "0.2", "0.3"]):
+        rp = results["passive" + base]
+        plot.vis(a[j,0], rp, c = plot.PASSIVE)
+        ra = results["active" + base]
+        plot.vis(a[j,1], ra, c = plot.ACTIVE)
+
+        passivelabel = "Passive Inference"
+        if j == 0:
+            passivelabel = "Passive\nInference"
+        plot.compare_beliefs(
+                a[j,2],
+                [rp["beliefs"], ra["beliefs"]],
+                goal=0,
+                labels=[passivelabel, "Active Inference"],
+                colors=[plot.PASSIVE, plot.ACTIVE],
+                legend=True,
+                fontsize=16)
+    plt.tight_layout(h_pad=7.0)
+    return f
+
 def passive01(plt, plot, results):
     f, a = plt.subplots()
     plot.vis(a, results["passive0.1"], c=plot.PASSIVE)
