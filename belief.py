@@ -24,7 +24,7 @@ def entropy(beliefs):
 #   >>> alpha = 0.5
 #   >>> l = boltzmann(beta)
 #   ...
-#   >>> p_goal_given = l(alpha, state, u_h, u_r, goal)
+#   >>> p_u_h_given = l(alpha, state, u_h, u_r, goal)
 
 def boltzmann(beta):
     """
