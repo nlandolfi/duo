@@ -56,7 +56,8 @@ def human_for(h, params):
 
     if h == HUMAN_OPTIMAL:
         if "variance" in params:
-            return human.fuzz(human.optimal, params["variance"])
+            if params["variance"] > 0:
+                return human.fuzz(human.optimal, params["variance"])
 
         return human.optimal
 
