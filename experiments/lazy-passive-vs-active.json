@@ -29,5 +29,5 @@
             "threshold": 0.785
         }
     },
-    "plots": ["compare", "beliefs"]
+    "plots": ["compare", "beliefs", "active", "passive"]
 }

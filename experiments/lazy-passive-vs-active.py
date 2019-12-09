@@ -25,6 +25,16 @@ def beliefs(plt, plot, results):
             [results["passive"]["beliefs"],
              results["active"]["beliefs"]],
             goal = 0,
-            labels=["passive", "active"],
+            labels=["Passive Inference", "Active Inference"],
             colors=[plot.PASSIVE, plot.ACTIVE])
+    return f
+
+def passive(plt, plot, results):
+    f, a = plt.subplots()
+    plot.vis(a, results["passive"], c=plot.PASSIVE)
+    return f
+
+def active(plt, plot, results):
+    f, a = plt.subplots()
+    plot.vis(a, results["active"], c=plot.ACTIVE)
     return f
